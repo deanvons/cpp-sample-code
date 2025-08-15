@@ -1,7 +1,7 @@
 
 ==============
 
-For this task you are to develop the foundation for a program 
+For this challenge you are to develop the foundation for a program 
 for movie fanatics to keep track of what movies they have watched
 and how many times they watched each movie.
 
@@ -45,6 +45,8 @@ Here is what your project files should look like:
 Don't create a menu-driven system like we've done in the past -- just concentrate on getting
 the program working. Once it is working, you can certainly provide a menu system for the user
 
+This program is not trivial for, but it's a good challenge for beginning C++ programmers.
+
 Here is a sample main and the output. Make sure you understand the program flow before
 you start coding!
 
@@ -53,7 +55,7 @@ Good luck and have fun!
 main.cpp
 ----------
 /******************************************************************
-
+ * 
  * main.cpp
  * 
  * Test the Movies project
