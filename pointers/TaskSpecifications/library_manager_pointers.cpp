@@ -8,7 +8,7 @@
 //  - Prepare for leak-checking (Valgrind or your IDE's analyzer)
 //
 // Build:
-//   g++ -std=c++17 -O2 -Wall -Wextra -pedantic library_pointers_starter.cpp -o library
+//   g++ -std=c++17 -O2 -Wall -Wextra -pedantic library_manager_pointers.cpp -o library
 // Run:
 //   ./library
 //
