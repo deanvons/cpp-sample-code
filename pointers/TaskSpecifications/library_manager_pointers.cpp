@@ -114,14 +114,24 @@ Book* create_book(const char* title, const char* author, int year) {
     // TODO: allocate and copy title & author using copy_cstr
     // TODO: on any failure, clean up and return nullptr
     // HINT: Set fields to owned pointers; keep year
-    Book* b = nullptr; // replace with your allocation & initialization
-    (void)title; (void)author; (void)year; // silence unused warnings during skeleton
+    Book* b = new (std::nothrow) Book; 
+    if(!b) return nullptr;
+    b->title = copy_cstr(title);
+    b->author = copy_cstr(author);
+    b->year = year;
+    if (!b->title || !b->author) {
+        destroy_book(b);
+        return nullptr;
+    }
     return b;
 }
 
 void destroy_book(Book* book) {
     if (!book) return;
     // TODO: delete[] title; delete[] author; then delete book
+    delete[] book->title;
+    delete[] book->author;
+    delete book;
 }
 
 void print_book(const Book* book) {
@@ -157,13 +167,21 @@ void init_library(Library* lib, int initial_capacity) {
     lib->count = 0;
     lib->capacity = (initial_capacity > 0 ? initial_capacity : 4);
     // TODO: allocate books array with new (nothrow) Book*[capacity]; set to nullptrs
-    lib->books = nullptr; // placeholder
+    lib->books = new (std::nothrow) Book*[lib->capacity];
+    if (!lib->books) {
+        lib->capacity = 0;
+        return;
+    }
+    std::fill_n(lib->books, lib->capacity, nullptr);
 }
 
 void destroy_library(Library* lib) {
     if (!lib) return;
     // TODO: free all Book* in the array (destroy_book), then delete[] the array
-    lib->books = nullptr;
+    for (int i = 0; i < lib->count; ++i){
+        destroy_book(lib->books[i]);
+    }
+    delete[] lib->books;
     lib->count = 0;
     lib->capacity = 0;
 }
@@ -174,21 +192,42 @@ bool ensure_capacity(Library* lib, int min_capacity) {
     // TODO: compute new_capacity (e.g., max(capacity*2, min_capacity))
     // TODO: allocate new Book** array, copy old pointers, delete[] old array
     // HINT: Do not allocate/copy Book objects here, only the pointer array
-    (void)min_capacity; // silence warning in skeleton
-    return false; // replace with true/false
+    if (lib->capacity >= min_capacity) return true;
+
+    int new_capacity = std::max(lib->capacity * 2, min_capacity);
+    Book** new_books = new (std::nothrow) Book*[new_capacity];
+    if (!new_books) return false;
+
+    for (int i = 0; i < lib->count; ++i) {
+        new_books[i] = lib->books[i];
+    }
+    delete[] lib->books;
+    lib->books = new_books;
+    lib->capacity = new_capacity;
+    return true;
 }
 
 bool add_book(Library* lib, Book* book) {
     if (!lib || !book) return false;
     // TODO: ensure capacity for count+1
     // TODO: insert pointer; increment count; take ownership
-    return false; // replace
+    if (!ensure_capacity(lib, lib->count + 1)) {
+        destroy_book(book); 
+        return false;
+    }
+    lib->books[lib->count++] = book;
+    return true;
 }
 
 Book* find_by_title(Library* lib, const char* title) {
     if (!lib || !title) return nullptr;
     // TODO: iterate using either indexing or pointer arithmetic and compare titles
     // Return the matching Book* or nullptr
+    for (int i = 0; i < lib->count; ++i) {
+        if (cstr_equal(lib->books[i]->title, title)) {
+            return lib->books[i];
+        }
+    }
     return nullptr;
 }
 
@@ -196,6 +235,17 @@ bool remove_by_title(Library* lib, const char* title) {
     if (!lib || !title) return false;
     // TODO: find index; destroy_book on the removed element
     // TODO: shift remaining pointers left (no gaps), decrement count
+    for (int i = 0; i < lib->count; ++i) {
+        if (cstr_equal(lib->books[i]->title, title)) {
+            destroy_book(lib->books[i]);
+            for (int j = i; j < lib->count - 1; ++j) {
+                lib->books[j] = lib->books[j + 1];
+            }
+            lib->books[--lib->count] = nullptr; // Clear last pointer
+            return true;
+        }
+    }
+    // No book found
     return false;
 }
 
@@ -203,12 +253,20 @@ void swap_books(Library* lib, int i, int j) {
     if (!lib) return;
     if (i < 0 || j < 0 || i >= lib->count || j >= lib->count) return;
     // TODO: implement purely with pointers to elements (no std::swap, no references)
+    Book* temp = lib->books[i];
+    lib->books[i] = lib->books[j];
+    lib->books[j] = temp;
 }
 
 void list_books_ptr_arith(const Library* lib) {
     if (!lib) return;
     // Iterate using pointer arithmetic (Book** p = lib->books; *(p + i))
     // TODO: print index + 1 and book details via print_book
+    Book** p = lib->books;
+    for (int i = 0; i < lib->count; ++i, ++p) {
+        std::cout << (i + 1) << ") ";
+        print_book(*p);
+    }
 }
 
 // ----------------------------------------------------------------------------------
